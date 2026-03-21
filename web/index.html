@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>🛸 Alien Lander GA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #04080f;
+            --bg2: #080e1c;
+            --bg3: #0d1628;
+            --border: #162030;
+            --accent: #00c8ff;
+            --green: #00ffaa;
+            --yellow: #ffc832;
+            --red: #ff3d5a;
+            --dim: #304860;
+            --text: #90b8d8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Share Tech Mono', monospace;
+            min-height: 100vh
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 999;
+            background: repeating-linear-gradient(transparent 0, transparent 3px, #00000012 3px, #00000012 4px)
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 26px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg2);
+            position: relative;
+            overflow: hidden
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            animation: hl 4s linear infinite
+        }
+
+        @keyframes hl {
+            0% {
+                transform: translateX(-100%)
+            }
+
+            100% {
+                transform: translateX(100%)
+            }
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.55rem;
+            font-weight: 900;
+            color: var(--accent);
+            text-shadow: 0 0 18px #00c8ff66;
+            letter-spacing: 3px
+        }
+
+        .sub {
+            font-size: .6rem;
+            color: var(--dim);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 3px
+        }
+
+        .badge {
+            margin-left: auto;
+            font-size: .65rem;
+            letter-spacing: 2px;
+            padding: 5px 12px;
+            border: 1px solid var(--accent);
+            border-radius: 3px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 7px
+        }
+
+        .led {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: blink 1.4s infinite
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .2
+            }
+        }
+
+        .wrap {
+            display: grid;
+            grid-template-columns: 1fr 290px;
+            grid-template-rows: auto auto;
+            gap: 14px;
+            padding: 18px 22px;
+            max-width: 1260px;
+            margin: 0 auto
+        }
+
+        .sim-box {
+            grid-column: 1;
+            grid-row: 1;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            overflow: hidden;
+            background: var(--bg);
+            position: relative
+        }
+
+        .sim-box::before {
+            content: 'SIMULATION';
+            position: absolute;
+            top: 8px;
+            left: 11px;
+            font-size: .58rem;
+            letter-spacing: 3px;
+            color: var(--dim);
+            z-index: 2
+        }
+
+        canvas {
+            display: block;
+            width: 100%
+        }
+
+        .ctrl {
+            grid-column: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 4px 0
+        }
+
+        .btn {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: .72rem;
+            letter-spacing: 1px;
+            padding: 7px 16px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all .15s
+        }
+
+        .p {
+            background: var(--accent);
+            color: #000;
+            font-weight: 700
+        }
+
+        .p:hover {
+            box-shadow: 0 0 14px #00c8ff55;
+            transform: translateY(-1px)
+        }
+
+        .sec {
+            background: var(--bg3);
+            color: var(--text);
+            border: 1px solid var(--border)
+        }
+
+        .sec:hover {
+            border-color: var(--accent);
+            color: var(--accent)
+        }
+
+        .d {
+            background: var(--red);
+            color: #fff
+        }
+
+        .spd {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            font-size: .68rem;
+            color: var(--dim)
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 3px;
+            background: var(--border);
+            border-radius: 99px;
+            width: 80px;
+            outline: none
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer
+        }
+
+        #sv {
+            color: var(--accent);
+            font-size: .8rem;
+            min-width: 26px
+        }
+
+        /* panel */
+        .panel {
+            grid-column: 2;
+            grid-row: 1/3;
+            display: flex;
+            flex-direction: column;
+            gap: 11px
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 13px 15px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00c8ff33, transparent)
+        }
+
+        .ct {
+            font-size: .58rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--dim);
+            margin-bottom: 11px
+        }
+
+        .sr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: .8rem
+        }
+
+        .sr:last-child {
+            border: none
+        }
+
+        .sl {
+            color: var(--dim)
+        }
+
+        .sv {
+            color: #fff;
+            font-size: .88rem
+        }
+
+        .ac {
+            color: var(--accent)
+        }
+
+        .gr {
+            color: var(--green)
+        }
+
+        .yw {
+            color: var(--yellow)
+        }
+
+        .rd {
+            color: var(--red)
+        }
+
+        .pgrid {
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+            margin: 5px 0
+        }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            transition: background .25s
+        }
+
+        .chart-box {
+            grid-column: 1;
+            grid-row: 2;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--bg2);
+            overflow: hidden
+        }
+
+        .ch {
+            padding: 7px 13px;
+            font-size: .58rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--dim);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .foot {
+            grid-column: 1/-1;
+            text-align: center;
+            font-size: .62rem;
+            color: var(--dim);
+            letter-spacing: 2px;
+            padding: 4px 0 6px
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>
+            <div class="logo">🛸 ALIEN LANDER</div>
+            <div class="sub">Algoritmo Genético · Ángulo &amp; Potencia · Plataforma Fija Aleatoria</div>
+        </div>
+        <div class="badge">
+            <div class="led"></div>EVOLUCIONANDO
+        </div>
+    </header>
+
+    <div class="wrap">
+        <div class="sim-box">
+            <canvas id="c" width="840" height="460"></canvas>
+        </div>
+
+        <div class="ctrl">
+            <button class="btn p" onclick="start()">▶ INICIAR / NUEVA GEN</button>
+            <button class="btn sec" onclick="pause()">⏸ PAUSAR</button>
+            <button class="btn d" onclick="reset()">↺ RESET</button>
+            <div class="spd">
+                VEL <input type="range" id="sr" min="1" max="10" value="2" oninput="setSp()">
+                <span id="sv">×2</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="card">
+                <div class="ct">Evolución</div>
+                <div class="sr"><span class="sl">Generación</span> <span class="sv ac" id="gn">0</span></div>
+                <div class="sr"><span class="sl">Aterrizados</span> <span class="sv gr" id="ln">—</span></div>
+                <div class="sr"><span class="sl">Mejor fitness</span><span class="sv" id="bf">0</span></div>
+                <div class="sr"><span class="sl">Prom. fitness</span><span class="sv" id="af">0</span></div>
+                <div class="sr"><span class="sl">🏆 Récord</span> <span class="sv yw" id="re">0</span></div>
+            </div>
+
+            <div class="card">
+                <div class="ct">Mejor Individuo</div>
+                <div class="sr"><span class="sl">Estado</span> <span class="sv gr" id="bs">—</span></div>
+                <div class="sr"><span class="sl">Vel X</span> <span class="sv" id="bvx">—</span></div>
+                <div class="sr"><span class="sl">Vel Y</span> <span class="sv" id="bvy">—</span></div>
+                <div class="sr"><span class="sl">Ángulo</span> <span class="sv" id="ba">—</span></div>
+                <div class="sr"><span class="sl">Dist pad</span> <span class="sv" id="bd">—</span></div>
+            </div>
+
+            <div class="card">
+                <div class="ct">Población</div>
+                <div class="pgrid" id="pg"></div>
+            </div>
+
+            <div class="card">
+                <div class="ct">Parámetros AG</div>
+                <div class="sr"><span class="sl">Cromosoma</span> <span class="sv ac">120×2 genes</span></div>
+                <div class="sr"><span class="sl">Población</span> <span class="sv">30</span></div>
+                <div class="sr"><span class="sl">Mutación</span> <span class="sv">5% (adapt.)</span></div>
+                <div class="sr"><span class="sl">Cruce</span> <span class="sv">BLX-α + 2pt</span></div>
+                <div class="sr"><span class="sl">Elitismo</span> <span class="sv">4</span></div>
+                <div class="sr"><span class="sl">Plataforma</span><span class="sv gr" id="padInfo">fija</span></div>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <div class="ch">HISTORIAL FITNESS &nbsp;━ Mejor &nbsp;━ Promedio</div>
+            <canvas id="cc" width="840" height="150"></canvas>
+        </div>
+
+        <div class="foot">DEMO WEB · ejecuta <code>python main.py</code> para la versión Pygame completa</div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════
+        //  Simulación JS completa — plataforma fija, sin fuel
+        // ═══════════════════════════════════════════════════════
+        const CW = 840, CH = 460;
+        const GRAV = 0.18, TMAX = 0.55, STEPS = 120, POP = 30;
+        const LVX = 1.8, LVY = 2.5, LANG = 15;
+        const PAD_W = 100, SPAWN_Y = 50;
+
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const rand = (a, b) => Math.random() * (b - a) + a;
+        const randI = (a, b) => Math.floor(rand(a, b + 1));
+
+        // ── Plataforma fija aleatoria ──────────────────────────
+        let padX, padY, spawnX;
+
+        function randomizePlatform() {
+            padX = rand(70, CW - 70 - PAD_W);
+            padY = rand(CH * 0.55, CH - 55);
+            // spawn lejos del pad
+            do { spawnX = rand(80, CW - 80); } while (Math.abs(spawnX - (padX + PAD_W / 2)) < 150);
+            document.getElementById('padInfo').textContent = `X=${Math.round(padX + PAD_W / 2)}`;
+        }
+
+        // ── Chromosome helpers ─────────────────────────────────
+        function randChrom() {
+            const c = new Float32Array(STEPS * 2);
+            for (let i = 0; i < STEPS; i++) { c[i * 2] = rand(-45, 45); c[i * 2 + 1] = rand(0, 1); }
+            return c;
+        }
+        const makeInd = c => ({
+            chrom: c || randChrom(), fit: -Infinity,
+            landed: false, crashed: false, vx: 0, vy: 0, ang: 0, dist: 0
+        });
+
+        // ── GA ─────────────────────────────────────────────────
+        const tour = (pop, k = 4) => {
+            let b = pop[randI(0, pop.length - 1)];
+            for (let i = 1; i < k; i++) { const c = pop[randI(0, pop.length - 1)]; if (c.fit > b.fit) b = c; }
+            return b;
+        };
+        function blendCross(p1, p2) {
+            const c1 = p1.chrom.slice(), c2 = p2.chrom.slice();
+            for (let i = 0; i < STEPS * 2; i += 2) {
+                if (Math.random() < .5) {
+                    const a = rand(.3, .7);
+                    c1[i] = a * p1.chrom[i] + (1 - a) * p2.chrom[i]; c1[i + 1] = a * p1.chrom[i + 1] + (1 - a) * p2.chrom[i + 1];
+                    c2[i] = a * p2.chrom[i] + (1 - a) * p1.chrom[i]; c2[i + 1] = a * p2.chrom[i + 1] + (1 - a) * p1.chrom[i + 1];
+                }
+            }
+            return [makeInd(c1), makeInd(c2)];
+        }
+        function mut(ind, rate) {
+            const c = ind.chrom.slice();
+            for (let i = 0; i < STEPS; i++) {
+                if (Math.random() < rate) c[i * 2] = clamp(c[i * 2] + (Math.random() * 2 - 1) * 18, -45, 45);
+                if (Math.random() < rate) c[i * 2 + 1] = clamp(c[i * 2 + 1] + (Math.random() * 2 - 1) * .22, 0, 1);
+            }
+            return makeInd(c);
+        }
+        function evolve(pop) {
+            const s = [...pop].sort((a, b) => b.fit - a.fit);
+            const landed = s.filter(i => i.landed).length;
+            const rate = landed > 0 ? .05 : .12;
+            const next = s.slice(0, 4).map(i => makeInd(i.chrom.slice()));
+            while (next.length < POP) {
+                const p1 = tour(pop), p2 = tour(pop);
+                const [c1, c2] = Math.random() < .85 ? blendCross(p1, p2) : [makeInd(p1.chrom.slice()), makeInd(p2.chrom.slice())];
+                next.push(mut(c1, rate), mut(c2, rate));
+            }
+            return next.slice(0, POP);
+        }
+
+        // ── Physics ────────────────────────────────────────────
+        function sim(chrom) {
+            let x = spawnX, y = SPAWN_Y, vx = 0, vy = 0, ang = 0;
+            const trail = [[x, y]];
+            let landed = false, crashed = false, lastT = STEPS - 1;
+
+            for (let t = 0; t < STEPS; t++) {
+                const ta = chrom[t * 2], th = chrom[t * 2 + 1];
+                ang += (ta - ang) * 0.15; ang = clamp(ang, -45, 45);
+                const ar = ang * Math.PI / 180;
+                vx += Math.sin(ar) * th * TMAX;
+                vy += -Math.cos(ar) * th * TMAX + GRAV;
+                x += vx; y += vy;
+                trail.push([x, y]); lastT = t;
+
+                if (x > padX - 8 && x < padX + PAD_W + 8 && y > padY - 4 && y < padY + 16) {
+                    landed = (Math.abs(vy) <= LVY && Math.abs(vx) <= LVX && Math.abs(ang) <= LANG && Math.abs(x - (padX + PAD_W / 2)) < PAD_W / 2);
+                    crashed = !landed; y = padY; break;
+                }
+                if (y >= CH - 38) { crashed = true; break; }
+                if (x < -20 || x > CW + 20 || y < -20) { crashed = true; break; }
+            }
+
+            const dist = Math.abs(x - (padX + PAD_W / 2));
+            const speed = Math.sqrt(vx * vx + vy * vy);
+            let fit = Math.max(0, 1200 - dist * 1.8) - speed * 50 - Math.abs(ang) * 4;
+            if (landed) fit += 3000 - speed * 30 - Math.abs(ang) * 10;
+            else if (crashed) fit -= 600;
+            fit += Math.max(0, (y - SPAWN_Y) / Math.max(1, padY - SPAWN_Y)) * 120;
+
+            return { trail, landed, crashed, fit, vx, vy, ang, dist };
+        }
+
+        // ── State ──────────────────────────────────────────────
+        let pop = [], gen = 0, bestEver = -Infinity, bestInd = null;
+        let hBest = [], hAvg = [];
+        let results = [], step = 0, maxStep = 0;
+        let running = false, paused = false, spd = 2, animId = null;
+        let stars = [];
+
+        function initStars() {
+            stars = Array.from({ length: 180 }, () => ({ x: rand(0, CW), y: rand(0, CH), b: rand(0, Math.PI * 2), s: rand(.4, 2.1) }));
+        }
+
+        function evalAll() {
+            results = pop.map(ind => {
+                const r = sim(ind.chrom);
+                ind.fit = r.fit; ind.landed = r.landed; ind.crashed = r.crashed;
+                ind.vx = r.vx; ind.vy = r.vy; ind.ang = r.ang; ind.dist = r.dist;
+                return r;
+            });
+            const fits = pop.map(i => i.fit);
+            const b = Math.max(...fits), a = fits.reduce((s, v) => s + v, 0) / fits.length;
+            if (b > bestEver) { bestEver = b; const bi = fits.indexOf(b); bestInd = { ...pop[bi] }; }
+            hBest.push(b); hAvg.push(a);
+            maxStep = Math.max(...results.map(r => r.trail.length));
+        }
+
+        // ── Render ─────────────────────────────────────────────
+        const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+        const cc = document.getElementById('cc'), cCtx = cc.getContext('2d');
+
+        function frame() {
+            // BG
+            const g = ctx.createLinearGradient(0, 0, 0, CH);
+            g.addColorStop(0, '#04080f'); g.addColorStop(1, '#080e1c');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
+
+            // Stars
+            const ts = Date.now() / 1000;
+            stars.forEach(s => {
+                const br = Math.floor(130 + 70 * Math.sin(ts + s.b));
+                ctx.fillStyle = `rgb(${br},${br},255)`;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.s / 2, 0, Math.PI * 2); ctx.fill();
+            });
+
+            // Ground
+            ctx.fillStyle = '#1a2840'; ctx.fillRect(0, CH - 38, CW, 38);
+            ctx.strokeStyle = '#283850'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, CH - 38); ctx.lineTo(CW, CH - 38); ctx.stroke();
+
+            // Platform (fixed)
+            const gp = ctx.createLinearGradient(padX, padY, padX + PAD_W, padY);
+            gp.addColorStop(0, '#00ffaa22'); gp.addColorStop(.5, '#00ffaa66'); gp.addColorStop(1, '#00ffaa22');
+            ctx.fillStyle = gp; ctx.fillRect(padX - 10, padY - 7, PAD_W + 20, PAD_H + 10);
+            ctx.fillStyle = '#00bb88'; ctx.beginPath(); ctx.roundRect(padX, padY, PAD_W, PAD_H, 3); ctx.fill();
+            ctx.fillStyle = '#00ffaa'; ctx.fillRect(padX + 6, padY + 3, PAD_W - 12, 5);
+            // Center crosshair
+            ctx.strokeStyle = '#00ffaa44'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+            ctx.beginPath(); ctx.moveTo(padX + PAD_W / 2, padY - 22); ctx.lineTo(padX + PAD_W / 2, padY); ctx.stroke();
+            ctx.setLineDash([]);
+
+            const bi = pop.reduce((mi, ind, i) => ind.fit > pop[mi].fit ? i : mi, 0);
+
+            // Trails non-best
+            results.forEach((r, i) => {
+                if (i === bi) return;
+                const e = Math.min(step, r.trail.length);
+                trailDraw(r.trail.slice(0, e), '#1a3a6044');
+            });
+            // Best trail
+            const eb = Math.min(step, results[bi]?.trail.length || 0);
+            trailDraw(results[bi]?.trail.slice(0, eb) || [], '#00c8ff77');
+
+            // Ships non-best
+            results.forEach((r, i) => {
+                if (i === bi) return;
+                const e = Math.min(step, r.trail.length);
+                if (e < 1) return;
+                const [sx, sy] = r.trail[e - 1];
+                const t2 = Math.min(e - 1, STEPS - 1);
+                shipDraw(ctx, sx, sy, pop[i].chrom[t2 * 2], (r.landed || r.crashed) ? 0 : pop[i].chrom[t2 * 2 + 1], '#1c3060');
+            });
+            // Best ship
+            if (eb >= 1) {
+                const [sx, sy] = results[bi].trail[eb - 1];
+                const t2 = Math.min(eb - 1, STEPS - 1);
+                shipDraw(ctx, sx, sy, pop[bi].chrom[t2 * 2], results[bi].landed ? 0 : pop[bi].chrom[t2 * 2 + 1], '#ffc832');
+            }
+
+            // HUD
+            ctx.fillStyle = '#304860'; ctx.font = '11px Share Tech Mono,monospace';
+            ctx.fillText(`GEN ${gen}  |  PAD X:${Math.round(padX + PAD_W / 2)}  |  ×${spd} VEL`, 10, 18);
+            const lc = results.filter(r => r.landed).length;
+            if (lc > 0) {
+                ctx.fillStyle = '#00ffaa'; ctx.font = 'bold 13px Share Tech Mono,monospace';
+                ctx.fillText(`✓ ATERRIZÓ: ${lc}`, 10, 36);
+            }
+        }
+
+        function trailDraw(trail, col) {
+            if (trail.length < 2) return;
+            ctx.strokeStyle = col; ctx.lineWidth = 1.2;
+            ctx.beginPath(); ctx.moveTo(trail[0][0], trail[0][1]);
+            trail.forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke();
+        }
+
+        function shipDraw(c, x, y, ang, thr, col) {
+            c.save(); c.translate(x, y); c.rotate(ang * Math.PI / 180);
+            c.fillStyle = col + 'cc'; c.beginPath(); c.ellipse(0, 4, 15, 8, 0, 0, Math.PI * 2); c.fill();
+            c.fillStyle = col + '99'; c.beginPath(); c.ellipse(2, -4, 10, 8, 0, 0, Math.PI * 2); c.fill();
+            c.fillStyle = '#a0deff88'; c.beginPath(); c.ellipse(2, -4, 6.5, 5, 0, 0, Math.PI * 2); c.fill();
+            c.strokeStyle = col + '77'; c.lineWidth = 2;
+            [[- 8, 8, -13, 19], [8, 8, 13, 19], [0, 9, 0, 21]].forEach(([x1, y1, x2, y2]) => {
+                c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+            });
+            if (Date.now() % 700 < 350) {
+                c.fillStyle = '#ff2244'; c.beginPath(); c.arc(-12, 4, 3, 0, Math.PI * 2); c.fill();
+                c.fillStyle = '#22ff66'; c.beginPath(); c.arc(12, 4, 3, 0, Math.PI * 2); c.fill();
+            }
+            if (thr > 0.05) {
+                const fl = thr * 28 + 7;
+                const fg = c.createLinearGradient(0, 14, 0, 14 + fl);
+                fg.addColorStop(0, '#ffc832bb'); fg.addColorStop(.5, '#ff5500aa'); fg.addColorStop(1, '#ff110000');
+                c.fillStyle = fg; c.beginPath();
+                c.moveTo(-4, 14); c.lineTo(4, 14); c.lineTo(1.5, 14 + fl); c.lineTo(-1.5, 14 + fl); c.closePath(); c.fill();
+            }
+            c.restore();
+        }
+
+        function chartDraw() {
+            const W = cc.width, H = cc.height;
+            cCtx.fillStyle = '#080e1c'; cCtx.fillRect(0, 0, W, H);
+            if (hBest.length < 2) return;
+            const mx = Math.max(...hBest, 100), mn = Math.min(...hBest, 0), rng = mx - mn || 1;
+            const px = i => (i / (hBest.length - 1)) * (W - 40) + 20;
+            const py = v => H - 14 - ((v - mn) / rng) * (H - 26);
+            cCtx.strokeStyle = '#0c1e30'; cCtx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const gy = H - 14 - i / 4 * (H - 26);
+                cCtx.beginPath(); cCtx.moveTo(20, gy); cCtx.lineTo(W - 10, gy); cCtx.stroke();
+                cCtx.fillStyle = '#304860'; cCtx.font = '9px monospace';
+                cCtx.fillText(Math.round(mn + (mx - mn) * i / 4), 2, gy + 4);
+            }
+            if (hAvg.length >= 2) {
+                cCtx.strokeStyle = '#00ffaa55'; cCtx.lineWidth = 1.5; cCtx.beginPath();
+                hAvg.forEach((v, i) => i ? cCtx.lineTo(px(i), py(v)) : cCtx.moveTo(px(i), py(v))); cCtx.stroke();
+            }
+            cCtx.strokeStyle = '#00c8ff'; cCtx.lineWidth = 2.5; cCtx.beginPath();
+            hBest.forEach((v, i) => i ? cCtx.lineTo(px(i), py(v)) : cCtx.moveTo(px(i), py(v))); cCtx.stroke();
+            cCtx.strokeStyle = '#00c8ff22'; cCtx.lineWidth = 7; cCtx.beginPath();
+            hBest.forEach((v, i) => i ? cCtx.lineTo(px(i), py(v)) : cCtx.moveTo(px(i), py(v))); cCtx.stroke();
+        }
+
+        function updateUI() {
+            const fits = pop.map(i => i.fit);
+            const b = Math.max(...fits), a = fits.reduce((s, v) => s + v, 0) / fits.length;
+            const ln = pop.filter(i => i.landed).length;
+            document.getElementById('gn').textContent = gen;
+            document.getElementById('ln').textContent = `${ln} / ${POP}`;
+            document.getElementById('bf').textContent = Math.round(b);
+            document.getElementById('af').textContent = Math.round(a);
+            document.getElementById('re').textContent = Math.round(bestEver);
+            if (bestInd) {
+                const el = document.getElementById('bs');
+                el.textContent = bestInd.landed ? '✓ ATERRIZÓ' : bestInd.crashed ? '✗ CHOCÓ' : 'EN VUELO';
+                el.className = 'sv ' + (bestInd.landed ? 'gr' : bestInd.crashed ? 'rd' : 'ac');
+                document.getElementById('bvx').textContent = (bestInd.vx || 0).toFixed(2);
+                document.getElementById('bvy').textContent = (bestInd.vy || 0).toFixed(2);
+                document.getElementById('ba').textContent = (bestInd.ang || 0).toFixed(1) + '°';
+                document.getElementById('bd').textContent = (bestInd.dist || 0).toFixed(1) + 'px';
+            }
+            const pg = document.getElementById('pg'); pg.innerHTML = '';
+            pop.forEach(ind => {
+                const d = document.createElement('div'); d.className = 'dot';
+                d.style.background = ind.landed ? '#00ffaa' : ind.crashed ? '#182a40' : '#00c8ff44';
+                if (ind.landed) d.style.boxShadow = '0 0 7px #00ffaa';
+                pg.appendChild(d);
+            });
+        }
+
+        function loop() {
+            if (!running || paused) return;
+            for (let i = 0; i < spd; i++) step++;
+            frame(); chartDraw(); updateUI();
+            if (step >= maxStep + 50) {
+                pop = evolve(pop); gen++;
+                evalAll(); step = 0;
+            }
+            animId = requestAnimationFrame(loop);
+        }
+
+        function start() {
+            if (animId) cancelAnimationFrame(animId);
+            randomizePlatform();
+            pop = Array.from({ length: POP }, () => makeInd());
+            gen = 0; bestEver = -Infinity; bestInd = null; hBest = []; hAvg = [];
+            evalAll(); step = 0; running = true; paused = false; loop();
+        }
+        function pause() { paused = !paused; if (!paused) loop(); }
+        function reset() {
+            if (animId) cancelAnimationFrame(animId);
+            running = false; paused = false;
+            ctx.fillStyle = '#04080f'; ctx.fillRect(0, 0, CW, CH);
+            cCtx.fillStyle = '#080e1c'; cCtx.fillRect(0, 0, cc.width, cc.height);
+            pop = []; results = []; step = 0; gen = 0; bestEver = -Infinity; bestInd = null; hBest = []; hAvg = [];
+        }
+        function setSp() { spd = +document.getElementById('sr').value; document.getElementById('sv').textContent = `×${spd}`; }
+
+        initStars();
+        start();
+    </script>
+</body>
+
+</html>
