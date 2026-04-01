@@ -109,7 +109,7 @@ python main.py --population 60 --mutation 0.08 --speed 3
 
 ## 📊 Comparación con Dino GA
 
-| Característica | Dino GA | Alien Lander GA |
+| Características | Dino GA | Alien Lander GA |
 |----------------|---------|-----------------|
 | Cromosoma | Pesos de red neuronal | Secuencia de comandos directos |
 | Genes | 81 reales | 240 reales |
